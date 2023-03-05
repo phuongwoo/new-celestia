@@ -1,0 +1,165 @@
+Hardware requirements
+The following minimum hardware requirements are recommended for running a light node:
+
+  Memory: 2 GB RAM
+  CPU: Single Core
+  Disk: 5 GB SSD Storage
+  Bandwidth: 56 Kbps for Download/56 Kbps for Upload
+Setting up your light node
+This tutorial was performed on an Ubuntu Linux 20.04 (LTS) x64 instance machine.
+Setup the dependencies
+First, make sure to update and upgrade the OS:
+
+APT
+YUM
+sudo apt update && sudo apt upgrade -y
+
+These are essential packages that are necessary to execute many tasks like downloading files, compiling, and monitoring the node:
+
+APT
+YUM
+Mac (Apple)
+Mac (Intel)
+sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential git make ncdu -y
+
+
+Install Golang
+Celestia-app and celestia-node are written in Golang so we must install Golang to build and run them.
+
+Mocha
+Arabica 🏗️
+Ubuntu (AMD)
+Ubuntu (ARM)
+Mac (Apple)
+Mac (Intel)
+ver="1.19.1" 
+cd $HOME 
+wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz" 
+sudo rm -rf /usr/local/go 
+sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz" 
+rm "go$ver.linux-amd64.tar.gz" 
+Now we need to add the /usr/local/go/bin directory to $PATH:
+
+bash
+zsh
+echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> $HOME/.bash_profile
+source $HOME/.bash_profile
+
+To check if Go was installed correctly run:
+
+go version
+
+The output should be the version installed:
+
+Ubuntu (AMD)
+Ubuntu (ARM)
+Mac (Apple)
+Mac (Intel)
+go version go1.19.1 linux/amd64
+
+Install celestia-node
+Mocha
+Arabica 🏗️
+Ubuntu (AMD)
+Ubuntu (ARM)
+Mac (Apple)
+Mac (Intel)
+Installing celestia-node for Mocha Testnet means installing a specific version to be compatible with the network.
+
+Install the celestia-node binary by running the following commands:
+
+cd $HOME 
+rm -rf celestia-node 
+git clone https://github.com/celestiaorg/celestia-node.git 
+cd celestia-node/ 
+git checkout tags/v0.6.4 
+make build 
+make install 
+make cel-key 
+Verify that the binary is working and check the version with the celestia version command:
+
+$ celestia version 
+Semantic version: v0.6.4 
+Commit: 747c9e593542dfb32a933c731a9cd74b1fab897f 
+Build Date: Thu Dec 15 10:19:22 PM UTC 2022 
+System version: amd64/linux 
+Golang version: go1.19.1 
+Initialize the light node
+Run the following command:
+
+Mocha
+Arabica 🏗️
+celestia light init
+
+You should see output like:
+
+$ celestia light init
+2022-12-19T21:45:24.591Z        INFO    node    nodebuilder/init.go:19  Initializing Light Node Store over '/root/.celestia-light-mocha'
+2022-12-19T21:45:24.591Z        INFO    node    nodebuilder/init.go:50  Saving config   {"path": "/root/.celestia-light-mocha/config.toml"}
+2022-12-19T21:45:24.592Z        INFO    node    nodebuilder/init.go:51  Node Store initialized
+
+
+Start the light node
+Mocha
+Arabica 🏗️
+Start the light node with a connection to a validator node's gRPC endpoint (which is usually exposed on port 9090):
+
+NOTE: In order for access to the ability to get/submit state-related information, such as the ability to submit PayForData transactions, or query for the node's account balance, a gRPC endpoint of a validator (core) node must be passed as directed below. For gateway, the default IP Address is localhost and the default port is 26659.
+
+celestia light start --core.ip <ip-address> --gateway --gateway.addr <ip-address> --gateway.port <port> --p2p.network mocha
+
+
+For ports:
+
+NOTE: The --core.ip gRPC port defaults to 9090, so if you do not specify it in the command line, it will default to that port. You can add the port after the IP address or use the --core.grpc.port flag to specify another port if you prefer.
+
+Mocha
+Arabica 🏗️
+If you need a list of RPC endpoints to connect to, you can check from the list here
+
+For example, your command might look something like this:
+
+celestia light start --core.ip https://rpc-mocha.pops.one --gateway --gateway.addr <ip-address> --gateway.port <port> --p2p.network mocha
+
+
+Keys and wallets
+You can create your key for your node by running the following command with the cel-key utility:
+
+./cel-key add <key_name> --keyring-backend test --node.type light --p2p.network <network>
+
+
+For arabica, if you are on 0.6.1, make sure to use --p2p.network arabica when generating your keys.
+
+You can start your light node with the key created above by running the following command:
+
+Mocha
+Arabica 🏗️
+celestia light start --core.ip <ip-address> --keyring.accname <key-name> --gateway --gateway.addr <ip-address> --gateway.port <port> --p2p.network mocha
+
+
+Once you start the Light Node, a wallet key will be generated for you. You will need to fund that address with testnet tokens to pay for PayForData transactions.
+
+You can find the address by running the following command in the celestia-node directory:
+
+./cel-key list --node.type light --keyring-backend test --p2p.network <network>
+
+
+You have two networks to get testnet tokens from:
+
+Arabica
+Mocha
+NOTE: If you are running a light node for your sovereign rollup, it is highly recommended to request Arabica devnet tokens as Arabica has the latest changes that can be used to test for developing your sovereign rollup. You can still use Mocha Testnet as well, it is just used for Validator operations.
+
+You can request funds to your wallet address using the following command in Discord:
+
+$request <Wallet-Address>
+
+Where <Wallet-Address> is the celestia1****** address generated when you created the wallet.
+
+Optional: run the light node with a custom key
+In order to run a light node using a custom key:
+
+The custom key must exist inside the celestia light node directory at the correct path (default: ~/.celestia-light/keys/keyring-test)
+The name of the custom key must be passed upon start, like so:
+Mocha
+Arabica 🏗️

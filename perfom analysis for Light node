@@ -1,0 +1,65 @@
+- Install the Light node success
+In the prevously step
+- Install OTEL Collector on the same machine as node
+Follow the guide to install from URL: https://opentelemetry.io/docs/collector/getting-started/
+Next step, configure for OTEL Col:receive metrics from node in /etc/otelcol/config.yaml
+Add exporters:
+  prometheusremotewrite:
+    endpoint: https://USER:PASSWORD@URL 
+
+- Register account on Grafana, create Prometheus API
+User: 923819
+Password: ******
+URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
+
+- Configure OTEL Collector to send metrics to Prometheus as following in config.yaml:
+For exporter part:
+exporters:
+  prometheusremotewrite:
+    endpoint: https://ID:passrord@URL
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  otlphttp:
+    endpoint: http://otel.celestia.tools:4318
+
+For metric of service part
+service:
+ metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, otlphttp,logging, prometheusremotewrite]
+
+- Configure OTEL Collector to enable the otlp receiver and the prometheusremotewrite exporter. In config.yaml
+- Restart OTEL Collector normally without error (using service systemd)
+sudo systemctl restart otelcol
+sudo journalctl -u otelcol -f
+
+- Node running normally, metric get normally by command curl http://localhost:9100/metrics
+
+  root@vmi1253159:~/celestia-node# curl http://localhost:9100/metrics
+# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 0.000468772
+go_gc_duration_seconds{quantile="0.25"} 0.000648594
+go_gc_duration_seconds{quantile="0.5"} 0.000694914
+go_gc_duration_seconds{quantile="0.75"} 0.000789147
+go_gc_duration_seconds{quantile="1"} 0.041557301
+go_gc_duration_seconds_sum 19.334123577
+go_gc_duration_seconds_count 8937
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 7
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.17.3"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 761448
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.
+# TYPE go_memstats_alloc_bytes_total counter
+
+- Configure display on Grafana: import Node dashboard and source from Prometheus API
+Open Grafana account, configure for dashboard to get performance of server (running light node)
+https://phuongwoo.grafana.net/
+
+- The metrics about performance of server displayed in Grafana
